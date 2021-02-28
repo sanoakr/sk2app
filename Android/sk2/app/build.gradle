@@ -1,0 +1,63 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-android-extensions'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.1"
+
+    defaultConfig {
+        applicationId "jp.ac.ryukoku.st.sk2"
+        minSdkVersion 26
+        targetSdkVersion 30
+        versionCode 1
+        versionName "2.0.0.a"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.3.2'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.preference:preference-ktx:1.1.1'
+    implementation 'com.google.android.material:material:1.3.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    // Anko
+    implementation "org.jetbrains.anko:anko:$anko_version"
+    // Google JSON
+    //implementation 'com.google.code.gson:gson:2.8.6'
+    // Moshi
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.4.31"
+    implementation 'com.squareup.moshi:moshi-kotlin:1.11.0'
+    // AltBeacon
+    implementation "org.altbeacon:android-beacon-library:$altbeacon_version"
+    // Moment
+    implementation 'me.mattak:moment:0.0.4'
+    // ThreeTen for Datetime
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.3.0'
+    // Location
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
+}
