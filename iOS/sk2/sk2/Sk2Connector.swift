@@ -15,15 +15,16 @@ class Sk2Connector {
     let connection: NWConnection
     var receiveData: Data!
 //    var receiveMessage: String!
-    var receiveCompleted: Bool
+    var completed: Bool
+    var succeed: Bool
     
     init(ip: String = SK2SERVER, port: UInt16 = SK2PORT, message: String) {
         print("sk2 connector")
         let host = NWEndpoint.Host(ip)
         let port = NWEndpoint.Port(integerLiteral: port)
         receiveData = Data()
-//        receiveMessage = String()
-        receiveCompleted = false // 受信完了フラグ
+        completed = false // 完了フラグ
+        succeed = false // 成功フラグ
 
         // TCP Options
         let tcpOptions = NWProtocolTCP.Options()
@@ -45,29 +46,36 @@ class Sk2Connector {
                 // 送信
                 self.send(message: message)
                 // 受信
-                self.receive()
-                
+                if (!self.completed) {
+                    self.receive()
+                }
             case .waiting(let error):
-                print("\(#function), \(error)")
-                self.close()
+                print("\(#function) Waiting: \(error)")
             case .failed(let error):
-                print("\(#function), \(error)")
+                print("\(#function), Failed: \(error)")
                 self.close()
+                self.completed = true
             case .setup:
-                print("sk2: Setup")
-            case .cancelled: break
-            case .preparing: break
+                print("\(#function), Setup:")
+            case .cancelled:
+                print("\(#function), Canceled:")
+                self.close()
+                self.completed = true
+            case .preparing:
+                break
             @unknown default:
                 print("\(#function), Unknown error")
                 self.close()
+                self.completed = true
             }
         }
 
-        // 5秒後に強制終了（tcpOptions の指定が効いてないので）
+        // 3秒後に強制終了（tcpOptions の指定が効いてなかったので）
         let cancelDispachQueue = DispatchQueue(label: "cancel")
-        cancelDispachQueue.asyncAfter(deadline: .now() + 5) {
+        cancelDispachQueue.asyncAfter(deadline: .now() + 3) {
             self.connection.forceCancel()
             print("force cancel connection with timeout")
+            self.completed = true
         }
 
         // 接続!!
@@ -75,7 +83,7 @@ class Sk2Connector {
         let dispachQueue = DispatchQueue(label: "sk2")
         connection.start(queue: dispachQueue)
         // 受信
-        //receive() // stateUpdateHandler に
+        //receive() // stateUpdateHandler へ
     }
 
     // String を取得
@@ -88,13 +96,14 @@ class Sk2Connector {
         let data = message.data(using: .utf8)
         connection.send(content: data, completion: .contentProcessed { (error) in
             if let error = error {
-                print("\(#function), \(error)")
+                print("Send Error: \(#function), \(error)")
+                self.close()
+                self.completed = true
             } else {
                 print("Send: \(String(describing: data))")
                 print(message)
             }
-            
-            })
+        })
     }
 
     // データ受信
@@ -108,10 +117,13 @@ class Sk2Connector {
             }
             if (isComplete) {
                 print("finish connection")
-                self.receiveCompleted = true
+                self.close()
+                self.completed = true
+                self.succeed = true
             } else if let error = error {
                 print("receiving error \(error)")
-                self.receiveCompleted = true
+                self.close()
+                self.completed = true
             } else {
                 print("continue receiving")
                 self.receive()

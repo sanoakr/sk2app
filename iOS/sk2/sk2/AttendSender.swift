@@ -14,20 +14,22 @@ class AttendSender {
     let userDefaults = UserDefaults.standard
 
     // 出席データを送信
-    func send(beacons: [CLBeacon], userText: String, typeSignal: sType, latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> String? {
+    func send(beacons: [CLBeacon], userText: String, typeSignal: sType, latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> (Bool, String?) {
         let message = makeAttend(beacons: beacons, userText: userText, typeSignal: typeSignal, latitude: latitude, longitude: longitude)
         
         // ネットワーク接続 // IP だと certification error
         let connector = Sk2Connector(message: message)
         // 受信完了まで待つ
-        while(!connector.receiveCompleted) {
+        while(!connector.completed) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {}
         }
-        // 受信/切断
-        let reply = connector.getDataString(encoding: .utf8)
-        connector.close()
-
-        return reply
+        // 成功してたらデータ取得
+        if (connector.succeed) {
+            let reply = connector.getDataString(encoding: .utf8)
+            return (true, reply)
+        } else {
+            return (false, "")
+        }
     }
     // ビーコン情報からメッセージ作成
     func makeAttend(beacons: [CLBeacon], userText: String, typeSignal: sType, latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> String {

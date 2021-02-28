@@ -308,11 +308,19 @@ class ClScanner: NSObject, ObservableObject {
 //        self.objectWillChange.send()
 //    }
     
-    // 最終更新日時を過去に巻き戻す（手動更新時などでインターバルを無視する）
-    func rewindLastSendDatetime(rewindMinute: Int) {
-        self.lastAutoSendDatetime = Calendar.current.date(byAdding: .minute, value: -10, to: Date())!
+    // 最終更新日時を現在時刻から過去 rewindMinute 分前に巻き戻す（手動更新時などでインターバルを無視する）
+    func rewindLastSendDatetime(rewindMinute: Int = 10) {
+        self.lastAutoSendDatetime = Calendar.current.date(byAdding: .minute, value: -rewindMinute, to: Date())!
     }
-    
+
+    // Fail Reasons
+    enum SendStat: Int {
+        case success
+        case short
+        case overtime
+        case emptybeacons
+        case unknown_fail
+    }
     // 送信処理
     func proceedSend(beacons: [CLBeacon], typeSignal: sType = .auto, manual: Bool = false) {
         // 送信ビーコンセット && 緯度経度
@@ -332,36 +340,31 @@ class ClScanner: NSObject, ObservableObject {
             }
         }
         // ビーコン情報送信
-        let (success, reply) = sendSk2Attend(beacons: sendBeacons, typeSignal: typeSignal, manual: manual, latitude: latitude, longitude: longitude)
-        if let reply = reply {
-            dtprint(string: "sk2 send: \(reply)")
+        let (stat, reply) = sendSk2Attend(beacons: sendBeacons, typeSignal: typeSignal, manual: manual, latitude: latitude, longitude: longitude)
+
+        // 手動のときだけ表示
+        if (buttonToggle) {
+            if (stat == .emptybeacons && buttonToggle) {
+            togglePopup(message: "出席ビーコンはありません", color: Color.red)
+            }
+            if (stat == .short) {
+                togglePopup(message: "時間外です", color: Color.red)
+            }
         }
-        // ログ画面に書き込み
-        if (success) { // 送信トライした
-            if (reply == "success") { // 送信成功
+        // 送信時処理
+        if let reply = reply { // 送信トライしていたら reply がある
+            dtprint(string: "sk2 send: \(reply)")
+            if (stat == .success) { // 送信成功
+                // ログ画面に成功として書き込み
                 insertBeaconInfo(beacons: sendBeacons, typeSignal: typeSignal, success: true, latitude: latitude, longitude: longitude)
                 togglePopup(message: "送信しました。", color: Color.blue)
-            } else {
+            } else { // 失敗 .unknown_fail
+                // ログ画面に失敗として書き込み
                 insertBeaconInfo(beacons: sendBeacons, typeSignal: typeSignal, success: false, latitude: latitude, longitude: longitude)
                 togglePopup(message: "送信に失敗しました。", color: Color.red)
             }
-        } else {
-            // 手動のときのみ表示
-            if (buttonToggle) {
-                switch reply {
-                //case "empty beacons":
-                //    togglePopup(message: "ビーコンが見つかりません", color: Color.red)
-                case "overtime":
-                    togglePopup(message: "時間外です", color: Color.red)
-                case "short interval":
-                    break
-                //togglePopup(message: "送信頻度が高すぎます", color: Color.red)
-                default:
-                    break
-                    //togglePopup(message: "送信されません", color: Color.red)
-                }
-            }
         }
+
         // ボタン通知をリセット
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.manualSendFinished = false
@@ -369,33 +372,39 @@ class ClScanner: NSObject, ObservableObject {
     }
     
     // サーバへ出席情報を送信
-    func sendSk2Attend(beacons: [CLBeacon], typeSignal: sType = .auto, manual: Bool = false, latitude: CLLocationDegrees = 0, longitude: CLLocationDegrees = 0) -> (Bool, String?) {
+    func sendSk2Attend(beacons: [CLBeacon], typeSignal: sType = .auto, manual: Bool = false, latitude: CLLocationDegrees = 0, longitude: CLLocationDegrees = 0) -> (SendStat, String?) {
         let now = Date()
         // 前回送信が5分未満なら送信しない // 手動のときは10分前に巻き戻しているので通過する
         if (now.timeIntervalSince(lastAutoSendDatetime) < 60 * 5) { // 5 minuites for testing
             dtprint(string: "\(#function): Too Short Interval")
-            return (false, "short interval")
+            return (.short, nil)
         }
         // 時間外なら送信しない（テスト時なので止めてません）
         let nowTime = timeFormatter.string(from: now)
         if (nowTime < startTime || endTime < nowTime) {
             dtprint(string: "\(#function): Overtime")
-//            return (false, "overtime")
+//            return (.overtime, nil)
         }
         // ビーコンが空なら送信しない（手動送信時は無視）
         if (!manual && beacons.count == 0) {
             dtprint(string: "\(#function): Empty Beacons")
-            return (false, "empty beacons")
+            return (.emptybeacons, nil)
         }
         // Connect & Send
         let attendSender = AttendSender()
-        let reply = attendSender.send(beacons: beacons, userText: sendText, typeSignal: typeSignal, latitude: latitude, longitude: longitude)
+        let (succeed, reply) = attendSender.send(beacons: beacons, userText: sendText, typeSignal: typeSignal, latitude: latitude, longitude: longitude)
+        
         if let reply = reply {
             dtprint(string: "REPLY:\(reply)")
         }
-        // 最終送信日時を更新
-        lastAutoSendDatetime = Date()
-        return (true, reply)
+
+        if succeed {
+            lastAutoSendDatetime = Date() // 成功してたら最終送信日時を現在に更新
+            return (.success, reply)
+        } else {
+            rewindLastSendDatetime(rewindMinute: 3) // 失敗なら3分前に巻き戻す
+            return (.unknown_fail, reply)
+        }
     }
     // 取得したビーコン情報からリージョンエリアを決める // GrobalArea.Identifiere -1 は利用しない
     func detectArea(beacons: [CLBeacon]) -> Area! {

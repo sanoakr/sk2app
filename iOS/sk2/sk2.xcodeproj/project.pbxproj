@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		21C0E34125E8D2F10015C609 /* sk2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C0E34025E8D2F10015C609 /* sk2App.swift */; };
-		21C0E34325E8D2F10015C609 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C0E34225E8D2F10015C609 /* ContentView.swift */; };
 		21C0E34525E8D2F30015C609 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21C0E34425E8D2F30015C609 /* Assets.xcassets */; };
 		21C0E34825E8D2F30015C609 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21C0E34725E8D2F30015C609 /* Preview Assets.xcassets */; };
 		21C0E35225E8D6530015C609 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C0E35125E8D6530015C609 /* SplashView.swift */; };
@@ -29,7 +28,6 @@
 /* Begin PBXFileReference section */
 		21C0E33D25E8D2F10015C609 /* sk2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sk2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		21C0E34025E8D2F10015C609 /* sk2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sk2App.swift; sourceTree = "<group>"; };
-		21C0E34225E8D2F10015C609 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		21C0E34425E8D2F30015C609 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		21C0E34725E8D2F30015C609 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		21C0E34925E8D2F30015C609 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -81,7 +79,6 @@
 			isa = PBXGroup;
 			children = (
 				21C0E34025E8D2F10015C609 /* sk2App.swift */,
-				21C0E34225E8D2F10015C609 /* ContentView.swift */,
 				21C0E34425E8D2F30015C609 /* Assets.xcassets */,
 				21C0E34925E8D2F30015C609 /* Info.plist */,
 				21C0E34625E8D2F30015C609 /* Preview Content */,
@@ -194,7 +191,6 @@
 				21C0E36D25E8D8A40015C609 /* dataStruct.swift in Sources */,
 				21C0E37925E8D9840015C609 /* MainView.swift in Sources */,
 				21C0E35C25E8D6F20015C609 /* Sk2Connector.swift in Sources */,
-				21C0E34325E8D2F10015C609 /* ContentView.swift in Sources */,
 				21C0E34125E8D2F10015C609 /* sk2App.swift in Sources */,
 				21C0E35625E8D6950015C609 /* WebPrivacyView.swift in Sources */,
 				21C0E37325E8D8E50015C609 /* ClScanner_CLextension.swift in Sources */,
