@@ -71,6 +71,37 @@ struct MainView: View {
     
     var body: some View {
         VStack {
+            HStack(spacing: -1) {
+                Button(action: {
+                    print("Button: Help")
+                    if let url = URL(string: "https://sk2.st.ryukoku.ac.jp/") {
+                        UIApplication.shared.open(url)
+                    }
+                }, label: {
+                    Text("about sk2")
+                        .foregroundColor(Color.blue)
+                        .background(Color.white)
+                        .padding(10)
+                        .frame(maxWidth: .infinity)
+                })
+                .border(Color.blue, width: /*@START_MENU_TOKEN@*/1/*@END_MENU_TOKEN@*/)
+                .frame(maxWidth: .infinity, alignment: .bottom)
+                
+                Button(action: {
+                    print("Logout?")
+                    self.showActionSheet = true
+                    self.showLogoutSheet = true
+                }, label: {
+                    Text("Logout")
+                        .foregroundColor(Color.blue)
+                        .background(Color.white)
+                        .padding(10)
+                        .frame(maxWidth: .infinity)
+                })
+                .border(Color.blue, width: /*@START_MENU_TOKEN@*/1/*@END_MENU_TOKEN@*/)
+                .frame(maxWidth: .infinity, alignment: .bottom)
+            }
+/*
             Divider()
             HStack {
                 Spacer().frame(width:40)
@@ -126,7 +157,7 @@ struct MainView: View {
                 Spacer().frame(width:30)
             }
             .padding(EdgeInsets(top: 10, leading:10, bottom:10, trailing:10))
-
+*/
             //Divider()
             List {
                 ForEach(clScanner.infos.list()) { info in
@@ -186,7 +217,7 @@ struct MainView: View {
             
             TextField("送信文字列（max16文字）", text: $sendText,
                       onCommit: {
-                        self.sendText = String(self.sendText.prefix(16))
+                        self.sendText = String(self.sendText.prefix(18))
                       })
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(5)

@@ -46,7 +46,6 @@ class MainActivityUi: AnkoComponent<MainActivity>, AnkoLogger {
         const val TEXT_HUGE = 16f
         const val TEXT_SHUGE = 26f
     }
-
     // ListView Adapter
     val recAdapter = RecordLocalAdapter()
 
@@ -54,13 +53,58 @@ class MainActivityUi: AnkoComponent<MainActivity>, AnkoLogger {
         // Reference to MainActivity
         val main = ui.owner
 
+
         relativeLayout {
             padding = dip(4)
             backgroundColor = COLOR_BACKGROUND
             /** ////////////////////////////////////////////////////////////////////////////// **/
             linearLayout {
                 id = MENU
-                /** /////////////////////////////////// **/
+                /** ////////////////////////////////////////////////////////////////////////////// **/
+                button("about sk2") {
+                    id = HELP
+                    textColor = COLOR_MAIN
+                    backgroundColor = COLOR_BACKGROUND
+                    textSize = TEXT_LARGE
+                    allCaps = false
+                    onClick {
+                        browse("https://sk2.st.ryukoku.ac.jp/")
+                    }
+                }.lparams {
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    margin = dip(0)
+                    weight = 1f
+                }
+/*                /** ////////////////////////////////////////////////////////////////////////////// **/
+                textView() {
+                    backgroundColor = COLOR_MAIN
+                }.lparams {
+                    margin = dip(0)
+                    padding = dip(1)
+                    width = dip(1)
+                    //weight = 1f
+                }*/
+                /** ////////////////////////////////////////////////////////////////////////////// **/
+                button("Logout") {
+                    id = EXIT
+                    textColor = COLOR_MAIN
+                    backgroundColor = COLOR_BACKGROUND
+                    textSize = TEXT_LARGE
+                    allCaps = false
+                    onClick {
+                        alert("ログアウトしますか？", "確認") {
+                            positiveButton("ログアウトします") { _ -> //sk2.readyTologout()
+                                ui.owner.logout()
+                            }
+                            negativeButton("キャンセル") { _ -> }
+                        }.show()
+                    }
+                }.lparams {
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    margin = dip(0)
+                    weight = 1f
+                }
+/*                /** /////////////////////////////////// **/
                 verticalLayout {
                     imageButton {
                         id = SEARCH
@@ -124,7 +168,9 @@ class MainActivityUi: AnkoComponent<MainActivity>, AnkoLogger {
                         gravity = Gravity.CENTER_HORIZONTAL
                     }
                 }
+ */
             }.lparams {
+                width = matchParent
                 centerHorizontally()
                 alignParentTop()
             }
