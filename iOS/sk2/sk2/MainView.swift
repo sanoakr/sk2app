@@ -182,9 +182,9 @@ struct MainView: View {
                             //}
                         }
                         HStack {
-                            Text((info.Notes1 ?? "No Beacons").replacingOccurrences(of: "_", with: " "))
+                            Text((info.Notes1 ?? "").replacingOccurrences(of: "_", with: " "))
                                 .font(.caption)
-                            Text("(\(String(Int(info.Major1 ?? -1))),\(String(Int(info.Minor1 ?? -1))))")
+                            Text("(\(String(Int(info.Major1 ?? -1))),\(String(Int(info.Minor1 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
                                 .font(.caption)
                             Spacer()
                         }
@@ -194,7 +194,7 @@ struct MainView: View {
                             HStack {
                                 Text(info.Notes2!.replacingOccurrences(of: "_", with: " "))
                                     .font(.caption)
-                                Text("(\(String(Int(info.Major2 ?? -1))),\(String(Int(info.Minor2 ?? -1))))")
+                                Text("(\(String(Int(info.Major2 ?? -1))),\(String(Int(info.Minor2 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
                                     .font(.caption)
                                 Spacer()
                             }
@@ -204,7 +204,7 @@ struct MainView: View {
                             HStack {
                                 Text(info.Notes3!.replacingOccurrences(of: "_", with: " "))
                                     .font(.caption)
-                                Text("(\(String(Int(info.Major3 ?? -1))),\(String(Int(info.Minor3 ?? -1))))")
+                                Text("(\(String(Int(info.Major3 ?? -1))),\(String(Int(info.Minor3 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
                                     .font(.caption)
                                 Spacer()
                             }
