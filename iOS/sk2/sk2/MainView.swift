@@ -256,7 +256,7 @@ struct MainView: View {
             print("ForceSend ActionSheet")
             // 手動送信確認シート
             return ActionSheet(title: Text("Force Sending"),
-                               message: Text("手動での出席送信を行いますか？"),
+                               message: Text("手動での出席送信を行いますか？\n手動送信では端末の位置情報が記録されます。"),
                                buttons: [
                                 .default(Text("自宅・学外から送信します"), action: {
                                     manualSendProceed(typeSignal: sType.off)

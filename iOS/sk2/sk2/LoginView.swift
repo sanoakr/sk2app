@@ -100,7 +100,7 @@ struct LoginView: View {
         .sheet(isPresented: $showPrivacyModal) {
             WebPrivacyView(showPrivacyActionSheet: $showPrivacyActionSheet)
                 .actionSheet(isPresented: $showPrivacyActionSheet, content: {
-                    ActionSheet(title: Text("理工出席プライバシーポリシーを承認"),
+                    ActionSheet(title: Text("先端理工出席sk2プライバシーポリシーを承認"),
                                 message: Text("承認しますか？"),
                                 buttons: [
                                     .default(Text("承認します"), action: {
