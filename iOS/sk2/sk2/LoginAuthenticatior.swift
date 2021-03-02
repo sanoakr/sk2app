@@ -20,7 +20,8 @@ class LoginAuthenticator: ObservableObject {
     
     // ログイン認証チャレンジ
     func challenge(orgnization: Int, id: String, passwd: String) -> Bool {
-        //print("sk2", id, passwd)
+        print("sk2", id, passwd)
+        
         let userDefaults = UserDefaults.standard
         userDefaults[.orgnization] = orgnization.description
         userDefaults[.userId] = id

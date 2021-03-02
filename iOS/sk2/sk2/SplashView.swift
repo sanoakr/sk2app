@@ -25,7 +25,7 @@ struct SplashView: View {
                 if loggedin && acceptPolicy && build == loggedinBuild {
                     MainView(loggedin: $loggedin, userId: userDefaults[.userId]!, userNameJP: userDefaults[.userNameJP]!)
                 } else {
-                    LoginView(loggedin: self.$loggedin, acceptPolicy: $acceptPolicy)
+                    LoginView(loggedin: $loggedin, acceptPolicy: $acceptPolicy)
                 }
                 
 //                Color.blue

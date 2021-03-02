@@ -64,6 +64,8 @@ class ClScanner: NSObject, ObservableObject {
     // Areaセット
     var areas: [Area] = []
     var currentArea: Area!
+    // スキャン実行フラグ
+    var scanning: Bool = true
     
     // 最新の取得ビーコン情報
     var lastBeaconUpdate: Date = Date()
@@ -81,7 +83,7 @@ class ClScanner: NSObject, ObservableObject {
 
     // イニシャライザ
     init(showActionSheet: Binding<Bool>) {
-        self._showActionSheet = showActionSheet
+        _showActionSheet = showActionSheet
         super.init()
         print("sk2 clScanner")
         
@@ -140,7 +142,7 @@ class ClScanner: NSObject, ObservableObject {
         globalArea = makeGlobalRegions()
         // global 領域でモニタリング開始
         currentArea = globalArea
-        //startRegion(area: globalArea) // しない
+        startRegion(area: globalArea, force: true)
         //startRegion(regions: regions1)
 
         // 日時フォーマット
@@ -221,19 +223,17 @@ class ClScanner: NSObject, ObservableObject {
     //
     // 領域モニタリングの開始
     //
-    func startRegion(area: Area) {
+    func startRegion(area: Area, force: Bool = false) {
         // 既存のモニタ領域は止める addReagions() 必要??
         stopRegion()
         // 手動ボタン時は必ず送信メニューを表示
-        if (self.buttonToggle) {
-            self.buttonToggle = false
-            self.showForceSendSheet = true
-            self.showActionSheet = true
-            self.objectWillChange.send()
+        if (buttonToggle) {
+            buttonToggle = false
+            showForceSendSheet = true
+            showActionSheet = true
+            objectWillChange.send()
             //
-            self.manualSendFinished = false
-            //
-            
+            manualSendFinished = false
         }
         
         for r in area.regions {
@@ -242,20 +242,25 @@ class ClScanner: NSObject, ObservableObject {
         }
         currentArea = area
         dtprint(string: "CL:Current Area; " + currentArea.identifier.description)
+        // スキャンフラグを上げる（stop 後もレンジングで起きる）
+        if force { scanning = true }
     }
     // ポップアップ送信
     func togglePopup(message: String, color: Color) {
         popupContents = (message, color)
         showPopup = true
-        self.objectWillChange.send()
+        objectWillChange.send()
     }
     // 領域モニタリングの停止
-    func stopRegion() {
+    func stopRegion(force: Bool = false) {
         for r in locationManager.monitoredRegions {
             dtprint(string: "CL:Stop Monitoring; " + r.identifier)
             locationManager.stopMonitoring(for: r)
         }
         dtprint(string: "CL:Stop Monitoring; " + currentArea.identifier.description)
+
+        // スキャンを完全停止（レンジングで startRegion させない）
+        if force { scanning = false }
     }
     // CLBeacon の配列をパースする
     func clBeaconParse(beacons: [CLBeacon], typeSignal: sType, success: Bool, latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> beaconLog? {
@@ -296,21 +301,21 @@ class ClScanner: NSObject, ObservableObject {
         }
         
         // MainView 更新
-        self.objectWillChange.send()
+        objectWillChange.send()
         // ログデータ保存
         let logJson = try! JSONEncoder().encode(infos.list())
         userDefaults[.logInfos] = logJson
     }
 //    // 領域トリガ情報を追加
 //    func insertBeaconInfo(string: String) {
-//        self.infos.enqueue(BeaconInfo(datetime: Date(), info: string, beacons: nil))
+//        infos.enqueue(BeaconInfo(datetime: Date(), info: string, beacons: nil))
 //        // MainView 更新
-//        self.objectWillChange.send()
+//        objectWillChange.send()
 //    }
     
     // 最終更新日時を現在時刻から過去 rewindMinute 分前に巻き戻す（手動更新時などでインターバルを無視する）
     func rewindLastSendDatetime(rewindMinute: Int = 10) {
-        self.lastAutoSendDatetime = Calendar.current.date(byAdding: .minute, value: -rewindMinute, to: Date())!
+        lastAutoSendDatetime = Calendar.current.date(byAdding: .minute, value: -rewindMinute, to: Date())!
     }
 
     // Fail Reasons
@@ -323,6 +328,9 @@ class ClScanner: NSObject, ObservableObject {
     }
     // 送信処理
     func proceedSend(beacons: [CLBeacon], typeSignal: sType = .auto, manual: Bool = false) {
+        // スキャンフラグがオフなら何もせずに終了
+        if !scanning { return }
+
         // 送信ビーコンセット && 緯度経度
         var sendBeacons = beacons
         var latitude: CLLocationDegrees = 0
@@ -347,7 +355,7 @@ class ClScanner: NSObject, ObservableObject {
             if (stat == .emptybeacons && buttonToggle) {
             togglePopup(message: "出席ビーコンはありません", color: Color.red)
             }
-            if (stat == .short) {
+            if (stat == .overtime) {
                 togglePopup(message: "時間外です", color: Color.red)
             }
         }
@@ -434,10 +442,10 @@ class ClScanner: NSObject, ObservableObject {
         locationManager.startUpdatingLocation()
         var coordinate: CLLocationCoordinate2D?
 
-        coordinate = self.locationManager.location?.coordinate
-        self.dtprint(string: "Location: \(String(describing: coordinate?.latitude)), \(String(describing: coordinate?.longitude))")
+        coordinate = locationManager.location?.coordinate
+        dtprint(string: "Location: \(String(describing: coordinate?.latitude)), \(String(describing: coordinate?.longitude))")
         // 停止
-        self.locationManager.stopUpdatingLocation()
+        locationManager.stopUpdatingLocation()
 
         return coordinate
     }

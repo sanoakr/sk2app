@@ -66,6 +66,7 @@ struct MainView: View {
     private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
     
     @ObservedObject var clScanner = ClScanner.default
+
     //@ObservedObject private var restrictInput = RestrictInput(16) // 16文字制限
     @State private var sendText = ""
     
@@ -89,8 +90,8 @@ struct MainView: View {
                 
                 Button(action: {
                     print("Logout?")
-                    self.showActionSheet = true
-                    self.showLogoutSheet = true
+                    showActionSheet = true
+                    showLogoutSheet = true
                 }, label: {
                     Text("Logout")
                         .foregroundColor(Color.blue)
@@ -140,8 +141,8 @@ struct MainView: View {
                 Spacer()
                 
                 Button(action: {
-                    self.showActionSheet = true
-                    self.showLogoutSheet = true
+                    showActionSheet = true
+                    showLogoutSheet = true
                     print("Logout?")
                 }) {
                     VStack {
@@ -217,7 +218,7 @@ struct MainView: View {
             
             TextField("送信文字列（max16文字）", text: $sendText,
                       onCommit: {
-                        self.sendText = String(self.sendText.prefix(18))
+                        sendText = String(sendText.prefix(18))
                       })
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(5)
@@ -229,15 +230,15 @@ struct MainView: View {
             Button(action: {
                 print("Button")
                 // 送信文字列を付与
-                self.clScanner.sendText = self.sendText
+                clScanner.sendText = sendText
                 // ボタンを通知
-                self.clScanner.buttonToggle = true
+                clScanner.buttonToggle = true
                 // バイブレーション
                 AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
                 // ビーコン検索ポップアップ
-                //self.clScanner.togglePopup(message: "ビーコンを検索します", color: Color.blue)
-                self.showActionSheet = true
-                self.clScanner.showForceSendSheet = true
+                //clScanner.togglePopup(message: "ビーコンを検索します", color: Color.blue)
+                showActionSheet = true
+                clScanner.showForceSendSheet = true
                 
             }, label: {
                 Text("出席")
@@ -247,7 +248,7 @@ struct MainView: View {
                     .foregroundColor(Color.white)
             })
             .frame(maxWidth: .infinity, alignment: .bottom)
-            .background(self.clScanner.disableBle ? Color.gray : Color.blue)
+            .background(clScanner.disableBle ? Color.gray : Color.blue)
             
             HStack {
                 Text("\(userId) / \(userNameJP)")
@@ -256,77 +257,78 @@ struct MainView: View {
                     .font(.footnote)
             }
             .padding(5)
+            // とりあえずボタンが表示されたら MainView 起動と判断してスキャンを再開させる
+            .onAppear { clScanner.startRegion(area: clScanner.globalArea, force: true) }
            
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // BLE アラート
-        .alert(isPresented: self.$clScanner.disableBle, content: {
+        .alert(isPresented: $clScanner.disableBle, content: {
             Alert(title: Text("Bleutooth Status"), message: Text("Bleutooth をオンにしてください。"), dismissButton: .default(Text("OK")))
         })
         // 位置情報 アラート
-        .alert(isPresented: self.$clScanner.disableLocationAuth, content: {
+        .alert(isPresented: $clScanner.disableLocationAuth, content: {
             Alert(title: Text("LocationAuth Status"), message: Text("ビーコン受信には詳細な位置情報が必要です。"), dismissButton: .default(Text("OK")))
         })
         // 送信時ポップアップ
         .popup(isPresented: $clScanner.showPopup) {
-            PopupMessageView(contents: self.clScanner.popupContents)
+            PopupMessageView(contents: clScanner.popupContents)
         }
         // Action Sheet
         .actionSheet(isPresented: $showActionSheet, content: {
-            self.generateActionSheet(showForceSendSheet: self.clScanner.showForceSendSheet)
+            generateActionSheet(showForceSendSheet: clScanner.showForceSendSheet)
         })
     }
     
     // ActionSheet Helper function
     func generateActionSheet(showForceSendSheet: Bool) -> ActionSheet {
-        print(self.showActionSheet)
-        print(self.showLogoutSheet)
-        print(showForceSendSheet)
-        if self.showLogoutSheet {
+        if showLogoutSheet {
             print("Logout ActionSheet")
             // ログアウト確認シート
             return ActionSheet(title: Text("Logout"),
                                message: Text("ログアウトしますか？"),
                                buttons: [
                                 .default(Text("ログアウトします"), action: {
-                                    self.userDefaults[.userName] = String()
-                                    self.userDefaults[.userNameJP] = String()
-                                    self.userDefaults[.sk2Key] = String()
-                                    self.loggedin = false
-                                    self.showActionSheet = false
-                                    self.showLogoutSheet = false
+                                    userDefaults[.userName] = String()
+                                    userDefaults[.userNameJP] = String()
+                                    userDefaults[.sk2Key] = String()
+                                    loggedin = false
+                                    showActionSheet = false
+                                    showLogoutSheet = false
+                                    // 領域スキャンを止める
+                                    clScanner.stopRegion(force: true)
                                 }),
                                 .destructive(Text("キャンセル"), action: {
-                                    self.showActionSheet = false
-                                    self.showLogoutSheet = false
+                                    showActionSheet = false
+                                    showLogoutSheet = false
                                 })
                                ]
             )
-        } else if self.clScanner.showForceSendSheet {
+        } else if clScanner.showForceSendSheet {
             print("ForceSend ActionSheet")
             // 手動送信確認シート
             return ActionSheet(title: Text("Force Sending"),
                                message: Text("手動での出席送信を行いますか？"),
                                buttons: [
                                 .default(Text("自宅・学外から送信します"), action: {
-                                    self.manualSendProceed(typeSignal: sType.off)
+                                    manualSendProceed(typeSignal: sType.off)
                                 }),
                                 .default(Text("龍大瀬田キャンパスから送信します"), action: {
-                                    self.manualSendProceed(typeSignal: sType.seta)
+                                    manualSendProceed(typeSignal: sType.seta)
                                 }),
                                 .default(Text("その他の龍大施設から送信します"), action: {
-                                    self.manualSendProceed(typeSignal: sType.ryukoku)
+                                    manualSendProceed(typeSignal: sType.ryukoku)
                                 }),
                                 .destructive(Text("キャンセル"), action: {
-                                    self.showActionSheet = false
-                                    self.clScanner.showForceSendSheet = false
+                                    showActionSheet = false
+                                    clScanner.showForceSendSheet = false
                                 })
                                ]
             )
         } else {
-            self.clScanner.showForceSendSheet = false
-            self.showLogoutSheet = false
-            self.showActionSheet = false
+            clScanner.showForceSendSheet = false
+            showLogoutSheet = false
+            showActionSheet = false
             
             return ActionSheet(title: Text("dummy"))
         }
@@ -335,13 +337,13 @@ struct MainView: View {
     // 手動送信
     func manualSendProceed(typeSignal: sType) {
         // rewind 10 minuites before
-        self.clScanner.rewindLastSendDatetime(rewindMinute: 10)
-        // Restart Regioning for Sending
-        self.clScanner.startRegion(area: self.clScanner.currentArea)
+        clScanner.rewindLastSendDatetime(rewindMinute: 10)
+        // FORCE Restart Regioning for Sending
+        clScanner.startRegion(area: clScanner.currentArea, force: true)
         
         // for
-        if !self.clScanner.manualSendFinished {
-            self.clScanner.proceedSend(beacons: [], typeSignal: typeSignal, manual: true)
+        if !clScanner.manualSendFinished {
+            clScanner.proceedSend(beacons: [], typeSignal: typeSignal, manual: true)
         }
     }
 }

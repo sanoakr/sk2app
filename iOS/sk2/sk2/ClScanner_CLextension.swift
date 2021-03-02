@@ -34,29 +34,29 @@ extension ClScanner: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            self.disableLocationAuth = false
+            disableLocationAuth = false
         case .notDetermined, .denied, .restricted:
-            self.disableLocationAuth = true
+            disableLocationAuth = true
         default:
             print("Unhandled case")
          }
 
          switch manager.accuracyAuthorization {
             case .reducedAccuracy:
-                self.disableLocationAuth = true
+                disableLocationAuth = true
             case .fullAccuracy:
-                self.disableLocationAuth = false
+                disableLocationAuth = false
            default:
               print("This should not happen!")
          }        
         // MainView 更新
-        self.objectWillChange.send()
+        objectWillChange.send()
     }
     
     // 位置認証のステータスが変更された
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         dtprint(string: "CL:Authorization Changed")
-        startRegion(area: currentArea)
+        startRegion(area: currentArea, force: true)
     }
 
     // 位置情報更新が一時停止した、再開した
@@ -127,8 +127,8 @@ extension ClScanner: CLLocationManagerDelegate {
                     dtprint(string: "CL:Stop Ranging: " + r.identifier.description)
                 }
             }
-            // Ranging 中のビーコンが無ければ Global モニタリング へ
-            if locationManager.rangedBeaconConstraints.count == 0 {
+            // スキャン中で、Ranging 中のビーコンが無ければ Global モニタリング へ
+            if locationManager.rangedBeaconConstraints.count == 0 && scanning {
                 startRegion(area: globalArea)
             }
             // トリガーInfo
@@ -163,19 +163,21 @@ extension ClScanner: CLLocationManagerDelegate {
             dtprint(string: "\(b.timestamp), UUID:\(b.uuid), Major:\(b.major), Minor:\(b.minor), Proximity:\(b.proximity.stringValue), Accuracy:\(b.accuracy), RSSI:\(b.rssi)")
         }
         // 最新のビーコン情報（手動送信用に時間と保持)
-        self.lastBeaconUpdate = Date()
-        self.lastBeacons = sBeacons
+        lastBeaconUpdate = Date()
+        lastBeacons = sBeacons
         // ビーコン情報送信処理
-        self.proceedSend(beacons: sBeacons)
+        proceedSend(beacons: sBeacons)
 
         // 取得したビーコン情報からリージョンエリアを再設定する
-        let area = detectArea(beacons: sBeacons)
-        if currentArea.identifier == setaIdentifier && area != nil {
-            startRegion(area: area!)
-            currentArea = area
-        } else if currentArea.identifier != setaIdentifier && area == nil {
-            startRegion(area: globalArea)
-            currentArea = globalArea
+        if scanning {
+            let area = detectArea(beacons: sBeacons)
+            if currentArea.identifier == setaIdentifier && area != nil {
+                startRegion(area: area!)
+                currentArea = area
+            } else if currentArea.identifier != setaIdentifier && area == nil {
+                startRegion(area: globalArea)
+                currentArea = globalArea
+            }
         }
     }
     // ロック中画面が表示された
@@ -189,7 +191,7 @@ extension ClScanner: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         disableBle = isDisableBle()
         // MainView 更新
-        self.objectWillChange.send()
+        objectWillChange.send()
     }
     // BLE の状態確認とアラート
     func isDisableBle() -> Bool {

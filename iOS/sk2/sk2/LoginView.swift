@@ -53,19 +53,19 @@ struct LoginView: View {
                 Spacer(minLength: 30)
                 
                 Button(action: {
-                    self.loggedin = self.authenticator.challenge(orgnization: self.orgnization, id: self.id, passwd: self.passwd)
+                    loggedin = authenticator.challenge(orgnization: orgnization, id: id, passwd: passwd)
                     // ログイン時に毎回ポリシー確認
-                    self.acceptPolicy = false
-                    if self.loggedin {
-                        self.showPrivacyModal = true
+                    acceptPolicy = false
+                    if loggedin {
+                        showPrivacyModal = true
                     } else {
-                        self.showFailPopup = true
+                        showFailPopup = true
                     }
                     withAnimation(.default) {
-                        self.attempts += 1
-                        if self.attempts > 5 {
-                            self.id = ""; self.passwd = ""
-                            self.attempts = 0
+                        attempts += 1
+                        if attempts > 5 {
+                            id = ""; passwd = ""
+                            attempts = 0
                         }
                     }
                 }) {
@@ -91,22 +91,22 @@ struct LoginView: View {
         .popup(isPresented: $showFailPopup) {
             PopupMessageView(contents:(message:"ログイン失敗", color: Color.red))
         }
-        .sheet(isPresented: self.$showPrivacyModal) {
-            WebPrivacyView(showPrivacyActionSheet: self.$showPrivacyActionSheet)
-                .actionSheet(isPresented: self.$showPrivacyActionSheet, content: {
+        .sheet(isPresented: $showPrivacyModal) {
+            WebPrivacyView(showPrivacyActionSheet: $showPrivacyActionSheet)
+                .actionSheet(isPresented: $showPrivacyActionSheet, content: {
                     ActionSheet(title: Text("理工出席プライバシーポリシーを承認"),
                                 message: Text("承認しますか？"),
                                 buttons: [
                                     .default(Text("承認します"), action: {
-                                        self.acceptPolicy = true
-                                        self.userDefaults[.acceptPolicy] = true
-                                        self.showPrivacyModal = false
+                                        acceptPolicy = true
+                                        userDefaults[.acceptPolicy] = true
+                                        showPrivacyModal = false
                                     }),
                                     .destructive(Text("承認しません"), action: {
-                                        self.loggedin = false
-                                        self.acceptPolicy = false
-                                        self.userDefaults[.acceptPolicy] = false
-                                        self.showPrivacyModal = false
+                                        loggedin = false
+                                        acceptPolicy = false
+                                        userDefaults[.acceptPolicy] = false
+                                        showPrivacyModal = false
                                     })
                         ]
                     )

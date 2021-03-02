@@ -68,12 +68,12 @@ struct Room: Codable {
 }
 class Rooms {
     static let `default` = Rooms()
-    private var data: [Room]
+    private var roomdata: [Room]
     private var code: Dictionary<Int, Dictionary<Int, Room>> // [Major: [Minor: Room]]
-    init() { data = []; code = [:] }
+    init() { roomdata = []; code = [:] }
     // 部屋を追加
     func add(data: [Room]) {
-        self.data += data
+        roomdata += data
         for room in data {
             if let major = room.Major, let minor = room.Minor {
                 // 初出なら階層を作成

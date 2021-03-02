@@ -29,12 +29,12 @@ class Sk2Connector {
         // TCP Options
         let tcpOptions = NWProtocolTCP.Options()
         tcpOptions.enableKeepalive = false
-        tcpOptions.keepaliveIdle = 2 //sec
-        tcpOptions.keepaliveCount = 2
-        tcpOptions.keepaliveInterval = 2
-        tcpOptions.connectionTimeout = 2
-        tcpOptions.connectionDropTime = 2
-        tcpOptions.persistTimeout = 2
+        tcpOptions.keepaliveIdle = 5 //sec
+        tcpOptions.keepaliveCount = 5
+        tcpOptions.keepaliveInterval = 5
+        tcpOptions.connectionTimeout = 5
+        tcpOptions.connectionDropTime = 5
+        tcpOptions.persistTimeout = 4
         // TLS 接続子
         let tlsParams = NWParameters.init(tls: NWProtocolTLS.Options(), tcp: tcpOptions)
         connection = NWConnection(host: host, port: port, using: tlsParams)
@@ -72,7 +72,7 @@ class Sk2Connector {
 
         // 3秒後に強制終了（tcpOptions の指定が効いてなかったので）
         let cancelDispachQueue = DispatchQueue(label: "cancel")
-        cancelDispachQueue.asyncAfter(deadline: .now() + 3) {
+        cancelDispachQueue.asyncAfter(deadline: .now() + 5) {
             self.connection.forceCancel()
             print("force cancel connection with timeout")
             self.completed = true

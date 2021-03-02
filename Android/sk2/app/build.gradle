@@ -12,7 +12,7 @@ android {
         applicationId "jp.ac.ryukoku.st.sk2"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 1
+        versionCode 30
         versionName "2.0.0.a"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

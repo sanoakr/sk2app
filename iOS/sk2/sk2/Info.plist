@@ -21,7 +21,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>BLEビーコン受信に利用します</string>
+	<string>出席情報記録のため教室設置のBLEビーコン受信に利用します</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>出席情報記録のため教室設置のBLEビーコン受信に利用します</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>BLEビーコン受信と手動送信時の位置情報取得に利用します</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
