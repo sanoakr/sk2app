@@ -22,7 +22,7 @@ struct SplashView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                if loggedin && acceptPolicy && build == loggedinBuild {
+                if loggedin && acceptPolicy {
                     MainView(loggedin: $loggedin, userId: userDefaults[.userId]!, userNameJP: userDefaults[.userNameJP]!)
                 } else {
                     LoginView(loggedin: $loggedin, acceptPolicy: $acceptPolicy)
@@ -38,6 +38,8 @@ struct SplashView: View {
             .navigationBarTitle("")
             .navigationBarHidden(true)
         }
+        // 全画面表示にする
+        .navigationViewStyle(StackNavigationViewStyle())
 //        .edgesIgnoringSafeArea(.all)
     }
 }

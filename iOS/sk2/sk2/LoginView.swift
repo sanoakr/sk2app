@@ -53,11 +53,17 @@ struct LoginView: View {
                 Spacer(minLength: 30)
                 
                 Button(action: {
+                    // loggiedin && acceptPolicy で SplashView から MainView へ遷移
                     loggedin = authenticator.challenge(orgnization: orgnization, id: id, passwd: passwd)
-                    // ログイン時に毎回ポリシー確認
                     acceptPolicy = false
+
                     if loggedin {
-                        showPrivacyModal = true
+                        // バージョン更新がなくてポリシー承認済みなら MainView へ
+                        if build == userDefaults[.appBuild] && version == userDefaults[.appVersion] && (userDefaults[.acceptPolicy] ?? false) {
+                            acceptPolicy = true
+                        } else {
+                            showPrivacyModal = true
+                        }
                     } else {
                         showFailPopup = true
                     }
@@ -123,7 +129,6 @@ struct Shake: GeometryEffect {
     
     func effectValue(size: CGSize) -> ProjectionTransform {
         ProjectionTransform(CGAffineTransform(translationX:
-            amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
-                                              y: 0))
+            amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)), y: 0))
     }
 }

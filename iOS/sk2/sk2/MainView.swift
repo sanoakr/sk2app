@@ -66,7 +66,7 @@ struct MainView: View {
     private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
     
     @ObservedObject var clScanner = ClScanner.default
-
+    
     //@ObservedObject private var restrictInput = RestrictInput(16) // 16文字制限
     @State private var sendText = ""
     
@@ -81,13 +81,12 @@ struct MainView: View {
                 }, label: {
                     Text("about sk2")
                         .foregroundColor(Color.blue)
-                        .background(Color.white)
                         .padding(10)
                         .frame(maxWidth: .infinity)
                 })
                 .border(Color.blue, width: /*@START_MENU_TOKEN@*/1/*@END_MENU_TOKEN@*/)
                 .frame(maxWidth: .infinity, alignment: .bottom)
-                
+                //
                 Button(action: {
                     print("Logout?")
                     showActionSheet = true
@@ -95,71 +94,31 @@ struct MainView: View {
                 }, label: {
                     Text("Logout")
                         .foregroundColor(Color.blue)
-                        .background(Color.white)
                         .padding(10)
                         .frame(maxWidth: .infinity)
                 })
                 .border(Color.blue, width: /*@START_MENU_TOKEN@*/1/*@END_MENU_TOKEN@*/)
                 .frame(maxWidth: .infinity, alignment: .bottom)
             }
-/*
-            Divider()
-            HStack {
-                Spacer().frame(width:40)
-                Button(action: {
-                    print("Button: Search")
-                    if let url = URL(string: "https://sk2.st.ryukoku.ac.jp/search/") {
-                        UIApplication.shared.open(url)
-                    }
-                }) {
-                    VStack {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 20, height: 20)
-                        Text("Log")
-                            .font(.subheadline)
-                    }
+
+            EmptyView()
+                // BLE アラート
+                .alert(isPresented: $clScanner.disableBle, content: {
+                    Alert(title: Text("Bleutooth Status"), message: Text("Bleutooth をオンにしてください。"), dismissButton: .default(Text("OK")))
+                })
+                // 位置情報 アラート
+                .alert(isPresented: $clScanner.disableLocationAuth, content: {
+                    Alert(title: Text("LocationAuth Status"), message: Text("ビーコン受信には詳細な位置情報が必要です。"), dismissButton: .default(Text("OK")))
+                })
+                // 送信時ポップアップ
+                .popup(isPresented: $clScanner.showPopup) {
+                    PopupMessageView(contents: clScanner.popupContents)
                 }
-                Spacer()
-                Button(action: {
-                    print("Button: Help")
-                    if let url = URL(string: "https://sk2.st.ryukoku.ac.jp/") {
-                        UIApplication.shared.open(url)
-                    }
-                }) {
-                    VStack {
-                        Image(systemName: "info.circle")
-                            //Image(systemName: "questionmark.square")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 20, height: 20)
-                        Text("Help")
-                            .font(.subheadline)
-                    }
-                }
-                Spacer()
+                // Action Sheet
+                .actionSheet(isPresented: $showActionSheet, content: {
+                    generateActionSheet(showForceSendSheet: clScanner.showForceSendSheet)
+                })
                 
-                Button(action: {
-                    showActionSheet = true
-                    showLogoutSheet = true
-                    print("Logout?")
-                }) {
-                    VStack {
-                        Image(systemName: "square.and.arrow.up")
-                            .resizable()
-                            .rotationEffect(.degrees(90))
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 20, height: 20)
-                        Text("Logout")
-                            .font(.subheadline)
-                    }
-                }
-                Spacer().frame(width:30)
-            }
-            .padding(EdgeInsets(top: 10, leading:10, bottom:10, trailing:10))
-*/
-            //Divider()
             List {
                 ForEach(clScanner.infos.list()) { info in
                     VStack(alignment: .leading) {
@@ -215,7 +174,7 @@ struct MainView: View {
                 }
             }
             .listStyle(PlainListStyle())
-            
+
             TextField("送信文字列（max16文字）", text: $sendText,
                       onCommit: {
                         sendText = String(sendText.prefix(18))
@@ -257,29 +216,18 @@ struct MainView: View {
                     .font(.footnote)
             }
             .padding(5)
-            // とりあえずボタンが表示されたら MainView 起動と判断してスキャンを再開させる
-            .onAppear { clScanner.startRegion(area: clScanner.globalArea, force: true) }
-           
+            // とりあえずボタンが表示されたら MainView 起動と判断して as viewDidLoad()
+            .onAppear {
+                // スキャンを再開させる
+                clScanner.startRegion(area: clScanner.globalArea, force: true)
+                // アプリバージョンを更新
+                userDefaults[.appBuild] = build
+                userDefaults[.appVersion] = version
+                
+            }
+            
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // BLE アラート
-        .alert(isPresented: $clScanner.disableBle, content: {
-            Alert(title: Text("Bleutooth Status"), message: Text("Bleutooth をオンにしてください。"), dismissButton: .default(Text("OK")))
-        })
-        // 位置情報 アラート
-        .alert(isPresented: $clScanner.disableLocationAuth, content: {
-            Alert(title: Text("LocationAuth Status"), message: Text("ビーコン受信には詳細な位置情報が必要です。"), dismissButton: .default(Text("OK")))
-        })
-        // 送信時ポップアップ
-        .popup(isPresented: $clScanner.showPopup) {
-            PopupMessageView(contents: clScanner.popupContents)
-        }
-        // Action Sheet
-        .actionSheet(isPresented: $showActionSheet, content: {
-            generateActionSheet(showForceSendSheet: clScanner.showForceSendSheet)
-        })
     }
-    
     // ActionSheet Helper function
     func generateActionSheet(showForceSendSheet: Bool) -> ActionSheet {
         if showLogoutSheet {
@@ -301,7 +249,7 @@ struct MainView: View {
                                 .destructive(Text("キャンセル"), action: {
                                     showActionSheet = false
                                     showLogoutSheet = false
-                                })
+                                }),
                                ]
             )
         } else if clScanner.showForceSendSheet {

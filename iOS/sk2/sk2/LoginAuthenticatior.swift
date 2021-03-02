@@ -50,9 +50,9 @@ class LoginAuthenticator: ObservableObject {
                     // ユーザー情報を View へ publish
                     userName = userDefaults[.userName]!
                     userNameJP = userDefaults[.userNameJP]!
-                    // アプリバージョン
-                    userDefaults[.appBuild] = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
-                    userDefaults[.appVersion] = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+                    // アプリバージョン > MainView 表示したら更新
+                    //userDefaults[.appBuild] = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")
+                    //userDefaults[.appVersion] = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
 
                     succeed = true
                 }
