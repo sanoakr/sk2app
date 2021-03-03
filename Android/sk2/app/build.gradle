@@ -5,6 +5,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        sk2 {
+            storeFile file('/Users/sano/git/sk2app/Android/KeyStore')
+            storePassword 'sk2loglog'
+            keyAlias 'sk2key'
+            keyPassword 'sk2loglog'
+        }
+    }
     compileSdkVersion 30
     buildToolsVersion "30.0.1"
 
@@ -12,10 +20,11 @@ android {
         applicationId "jp.ac.ryukoku.st.sk2"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 30
-        versionName "2.0.0.a"
+        versionCode 31
+        versionName "2.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.sk2
     }
 
     buildTypes {
