@@ -100,81 +100,83 @@ struct MainView: View {
                 .border(Color.blue, width: /*@START_MENU_TOKEN@*/1/*@END_MENU_TOKEN@*/)
                 .frame(maxWidth: .infinity, alignment: .bottom)
             }
-
-            EmptyView()
-                // BLE アラート
-                .alert(isPresented: $clScanner.disableBle, content: {
-                    Alert(title: Text("Bleutooth Status"), message: Text("Bleutooth をオンにしてください。"), dismissButton: .default(Text("OK")))
-                })
-                // 位置情報 アラート
-                .alert(isPresented: $clScanner.disableLocationAuth, content: {
-                    Alert(title: Text("LocationAuth Status"), message: Text("ビーコン受信には詳細な位置情報が必要です。"), dismissButton: .default(Text("OK")))
-                })
-                // 送信時ポップアップ
-                .popup(isPresented: $clScanner.showPopup) {
-                    PopupMessageView(contents: clScanner.popupContents)
-                }
-                // Action Sheet
-                .actionSheet(isPresented: $showActionSheet, content: {
-                    generateActionSheet(showForceSendSheet: clScanner.showForceSendSheet)
-                })
-                
-            List {
-                ForEach(clScanner.infos.list()) { info in
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text(info.Datetime ?? "No Timestamp")
-                                .font(.caption)
-                                //.frame(maxWidth: .infinity, alignment: .leading)
-                                .fontWeight(.semibold)
-                                .foregroundColor(info.Success ? Color.blue : Color.red)
-                            Spacer()
-                            Text(sType(rawValue: info.Stype ?? 0)?.name() ?? "Unknown")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color.green)
+            
+            ZStack(alignment: .bottom){
+                List {
+                    ForEach(clScanner.infos.list()) { info in
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text(info.Datetime ?? "No Timestamp")
+                                    .font(.caption)
+                                    //.frame(maxWidth: .infinity, alignment: .leading)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(info.Success ? Color.blue : Color.red)
+                                Spacer()
+                                Text(sType(rawValue: info.Stype ?? 0)?.name() ?? "Unknown")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color.green)
+                                
+                                // Show Location
+                                //if info.Stype != Int(0) {
+                                //    Text("(\(String(format: "%.2f", Float(info.Latitude ?? 0))),\(String(format: "%.2f", Float(info.Longitude ?? 0))))")
+                                //        .font(.caption)
+                                //}
+                            }
+                            HStack {
+                                Text((info.Notes1 ?? "").replacingOccurrences(of: "_", with: " "))
+                                    .font(.caption)
+                                Text("(\(String(Int(info.Major1 ?? -1))),\(String(Int(info.Minor1 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
+                                    .font(.caption)
+                                Spacer()
+                            }
+                            .padding(.leading, 5)
                             
-                            // Show Location
-                            //if info.Stype != Int(0) {
-                            //    Text("(\(String(format: "%.2f", Float(info.Latitude ?? 0))),\(String(format: "%.2f", Float(info.Longitude ?? 0))))")
-                            //        .font(.caption)
-                            //}
-                        }
-                        HStack {
-                            Text((info.Notes1 ?? "").replacingOccurrences(of: "_", with: " "))
-                                .font(.caption)
-                            Text("(\(String(Int(info.Major1 ?? -1))),\(String(Int(info.Minor1 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
-                                .font(.caption)
-                            Spacer()
-                        }
-                        .padding(.leading, 5)
-                        
-                        if info.Notes2 != nil {
-                            HStack {
-                                Text(info.Notes2!.replacingOccurrences(of: "_", with: " "))
-                                    .font(.caption)
-                                Text("(\(String(Int(info.Major2 ?? -1))),\(String(Int(info.Minor2 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
-                                    .font(.caption)
-                                Spacer()
+                            if info.Notes2 != nil {
+                                HStack {
+                                    Text(info.Notes2!.replacingOccurrences(of: "_", with: " "))
+                                        .font(.caption)
+                                    Text("(\(String(Int(info.Major2 ?? -1))),\(String(Int(info.Minor2 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
+                                        .font(.caption)
+                                    Spacer()
+                                }
+                                .padding(.leading, 5)
                             }
-                            .padding(.leading, 5)
-                        }
-                        if info.Notes3 != nil {
-                            HStack {
-                                Text(info.Notes3!.replacingOccurrences(of: "_", with: " "))
-                                    .font(.caption)
-                                Text("(\(String(Int(info.Major3 ?? -1))),\(String(Int(info.Minor3 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
-                                    .font(.caption)
-                                Spacer()
+                            if info.Notes3 != nil {
+                                HStack {
+                                    Text(info.Notes3!.replacingOccurrences(of: "_", with: " "))
+                                        .font(.caption)
+                                    Text("(\(String(Int(info.Major3 ?? -1))),\(String(Int(info.Minor3 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
+                                        .font(.caption)
+                                    Spacer()
+                                }
+                                .padding(.leading, 5)
                             }
-                            .padding(.leading, 5)
                         }
+                        .padding(EdgeInsets(top:0, leading:0, bottom:0, trailing: 0))
                     }
-                    .padding(EdgeInsets(top:0, leading:0, bottom:0, trailing: 0))
                 }
+                .listStyle(PlainListStyle())
+                
+                EmptyView()
+                    // BLE アラート
+                    .alert(isPresented: $clScanner.disableBle, content: {
+                        Alert(title: Text("Bleutooth Status"), message: Text("Bleutooth をオンにしてください。"), dismissButton: .default(Text("OK")))
+                    })
+                    // 位置情報 アラート
+                    .alert(isPresented: $clScanner.disableLocationAuth, content: {
+                        Alert(title: Text("LocationAuth Status"), message: Text("ビーコン受信には詳細な位置情報が必要です。"), dismissButton: .default(Text("OK")))
+                    })
+                    // 送信時ポップアップ
+                    .popup(isPresented: $clScanner.showPopup) {
+                        PopupMessageView(contents: clScanner.popupContents)
+                    }
+                    // Action Sheet
+                    .actionSheet(isPresented: $showActionSheet, content: {
+                        generateActionSheet(showForceSendSheet: clScanner.showForceSendSheet)
+                    })
             }
-            .listStyle(PlainListStyle())
-
+            
             TextField("送信文字列（max16文字）", text: $sendText,
                       onCommit: {
                         sendText = String(sendText.prefix(18))

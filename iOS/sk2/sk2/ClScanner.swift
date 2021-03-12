@@ -127,9 +127,9 @@ class ClScanner: NSObject, ObservableObject {
         UNUserNotificationCenter.current().requestAuthorization(options: [.badge, .sound, .alert]) { (granted, error) in
             DispatchQueue.main.async {
                 if !granted {
-                    _ = UIAlertController(title: "通知がOFF", message: "プッシュ通知がOFF。PUSHは届かない", preferredStyle: .alert)
+                    _ = UIAlertController(title: "通知がOFF", message: "出席送信の通知は届きません", preferredStyle: .alert)
                 } else {
-                    _ = UIAlertController(title: "通知ON", message: "プッシュ通知がON。PUSHが届く", preferredStyle: .alert)
+                    _ = UIAlertController(title: "通知ON", message: "出席送信の通知が届きます", preferredStyle: .alert)
                 }
             }
         }
@@ -174,9 +174,9 @@ class ClScanner: NSObject, ObservableObject {
         //let regions = [Region(beacons: [], identifier: setaIdentifier, constraint: setaConstraint, region: setaRegion)]
         // 領域の侵入Notificationを登録
         // Build Setting > Swift Compiler - Custom Flags > Active .. > Debug "DEBUG"
-        #if DEBUG
-        registerTriggerdNotification(region: setaRegion)
-        #endif
+        //#if DEBUG
+        //registerTriggerdNotification(region: setaRegion)
+        //#endif
         return Area(identifier: setaIdentifier, regions: regions)
     }
     // Rooms 辞書から Majorごとの Areaセットを作成
@@ -194,12 +194,13 @@ class ClScanner: NSObject, ObservableObject {
 
             // 各領域の侵入Notificationを登録
             // Build Setting > Swift Compiler - Custom Flags > Active .. > Debug "DEBUG"
-            #if DEBUG
-            registerTriggerdNotification(region: region)
-            #endif
+            //#if DEBUG
+            //registerTriggerdNotification(region: region)
+            //#endif
         }
         return areas
     }
+    /*
     // 領域に入ったときに発火する Notification を登録する
     func registerTriggerdNotification(region: CLRegion) {
         region.notifyOnEntry = true
@@ -213,6 +214,7 @@ class ClScanner: NSObject, ObservableObject {
 
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
+    */
     // 日時付き dtprint(string: )
     func dtprint(string: String) {
         // Build Setting > Swift Compiler - Custom Flags > Active .. > Debug "DEBUG"
@@ -299,7 +301,6 @@ class ClScanner: NSObject, ObservableObject {
         if let beaconLog = clBeaconParse(beacons: beacons, typeSignal: typeSignal, success: success, latitude: latitude, longitude: longitude) {
             infos.enqueue(element: beaconLog)
         }
-        
         // MainView 更新
         objectWillChange.send()
         // ログデータ保存
@@ -349,6 +350,7 @@ class ClScanner: NSObject, ObservableObject {
         }
         // ビーコン情報送信
         let (stat, reply) = sendSk2Attend(beacons: sendBeacons, typeSignal: typeSignal, manual: manual, latitude: latitude, longitude: longitude)
+        dtprint(string: "(\(stat), \(String(describing: reply)))")
 
         // 手動のときだけ表示
         if (buttonToggle) {
@@ -372,7 +374,6 @@ class ClScanner: NSObject, ObservableObject {
                 togglePopup(message: "送信に失敗しました。", color: Color.red)
             }
         }
-
         // ボタン通知をリセット
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.manualSendFinished = false
@@ -387,11 +388,11 @@ class ClScanner: NSObject, ObservableObject {
             dtprint(string: "\(#function): Too Short Interval")
             return (.short, nil)
         }
-        // 時間外なら送信しない（テスト時なので止めてません）
+        // 時間外なら送信しない
         let nowTime = timeFormatter.string(from: now)
         if (nowTime < startTime || endTime < nowTime) {
             dtprint(string: "\(#function): Overtime")
-//            return (.overtime, nil)
+            return (.overtime, nil)
         }
         // ビーコンが空なら送信しない（手動送信時は無視）
         if (!manual && beacons.count == 0) {
@@ -402,10 +403,25 @@ class ClScanner: NSObject, ObservableObject {
         let attendSender = AttendSender()
         let (succeed, reply) = attendSender.send(beacons: beacons, userText: sendText, typeSignal: typeSignal, latitude: latitude, longitude: longitude)
         
-        if let reply = reply {
-            dtprint(string: "REPLY:\(reply)")
-        }
+        if let reply = reply { dtprint(string: "REPLY:\(reply)") }
 
+        // 出席送信を通知
+        var body: String = "\(typeSignal.name()): "
+        if beacons.isEmpty {
+            body += "No Beacon"
+        } else {
+            for i in 0...2 {
+                if i < beacons.count {
+                    let major: Int = beacons[i].major.intValue
+                    let minor: Int = beacons[i].minor.intValue
+                    let beaconName = rooms.getRoom(major: major, minor: minor)
+                    body += "\(beaconName), "
+                }
+            }
+        }
+        sendNotification(succeed: succeed, body: body)
+        dtprint(string: body)
+        
         if succeed {
             lastAutoSendDatetime = Date() // 成功してたら最終送信日時を現在に更新
             return (.success, reply)
@@ -413,7 +429,23 @@ class ClScanner: NSObject, ObservableObject {
             rewindLastSendDatetime(rewindMinute: 3) // 失敗なら3分前に巻き戻す
             return (.unknown_fail, reply)
         }
+
     }
+    // 送信時 Notification を登録する
+    func sendNotification(succeed: Bool, body: String) {
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false) // 3秒後
+        let content = UNMutableNotificationContent()
+        content.title = "出席記録の送信"
+        if !succeed {
+            content.title += "(失敗)"
+        }
+        content.body = body
+        content.sound = UNNotificationSound.default
+        let request = UNNotificationRequest(identifier: "immediately", content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+
     // 取得したビーコン情報からリージョンエリアを決める // GrobalArea.Identifiere -1 は利用しない
     func detectArea(beacons: [CLBeacon]) -> Area! {
         for b in beacons {

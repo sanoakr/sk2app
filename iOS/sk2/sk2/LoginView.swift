@@ -23,14 +23,25 @@ struct LoginView: View {
     // ログイン失敗ポップアップ
     @State private var showFailPopup = false
     // プライバシーモーダルの表示フラグ
-    @State private var showPrivacyModal = false
+    //@State private var showPrivacyModal = false
     // プライバシー承認シートの表示フラグ
     @State private var showPrivacyActionSheet = false
+    
     // 組織ID
     let orgnization = 0
     // ログイン認証器
     @ObservedObject private var authenticator = LoginAuthenticator()
     
+    // Sheet enum
+    enum PresentSheet {
+        case explain0
+        case explain1
+        case privacy
+    }
+    // SheetView
+    @State private var presentSheet: PresentSheet = .explain0
+    @State private var showSheet = false
+        
     var body: some View {
         VStack {
             Spacer(minLength:30)
@@ -62,7 +73,8 @@ struct LoginView: View {
                         if build == userDefaults[.appBuild] && version == userDefaults[.appVersion] && (userDefaults[.acceptPolicy] ?? false) {
                             acceptPolicy = true
                         } else {
-                            showPrivacyModal = true
+                            //showPrivacyModal = true
+                            showSheet = true
                         }
                     } else {
                         showFailPopup = true
@@ -81,7 +93,7 @@ struct LoginView: View {
                         .overlay(
                             Capsule(style: .continuous)
                                 .stroke(Color.blue, lineWidth: 2)
-                    )
+                        )
                 }
                 Spacer();
                 HStack {
@@ -97,26 +109,39 @@ struct LoginView: View {
         .popup(isPresented: $showFailPopup) {
             PopupMessageView(contents:(message:"ログイン失敗", color: Color.red))
         }
-        .sheet(isPresented: $showPrivacyModal) {
-            WebPrivacyView(showPrivacyActionSheet: $showPrivacyActionSheet)
-                .actionSheet(isPresented: $showPrivacyActionSheet, content: {
-                    ActionSheet(title: Text("先端理工出席sk2プライバシーポリシーを承認"),
-                                message: Text("承認しますか？"),
-                                buttons: [
-                                    .default(Text("承認します"), action: {
-                                        acceptPolicy = true
-                                        userDefaults[.acceptPolicy] = true
-                                        showPrivacyModal = false
-                                    }),
-                                    .destructive(Text("承認しません"), action: {
-                                        loggedin = false
-                                        acceptPolicy = false
-                                        userDefaults[.acceptPolicy] = false
-                                        showPrivacyModal = false
-                                    })
-                        ]
-                    )
-                })
+        .sheet(isPresented: $showSheet) {
+            if (presentSheet == .explain0) {
+                Text("説明0")
+                Button("次へ") {
+                    presentSheet = .explain1
+                }
+            } else if (presentSheet == .explain1) {
+                Text("説明1")
+                Button("次へ") {
+                    presentSheet = .privacy
+                }
+            } else if (presentSheet == .privacy) {
+                WebPrivacyView(showPrivacyActionSheet: $showPrivacyActionSheet)
+                    .actionSheet(isPresented: $showPrivacyActionSheet, content: {
+                        ActionSheet(title: Text("先端理工出席sk2プライバシーポリシーを承認"),
+                                    message: Text("承認しますか？"),
+                                    buttons: [
+                                        .default(Text("承認します"), action: {
+                                            acceptPolicy = true
+                                            userDefaults[.acceptPolicy] = true
+                                            showSheet = false
+                                        }),
+                                        .destructive(Text("承認しません"), action: {
+                                            loggedin = false
+                                            acceptPolicy = false
+                                            userDefaults[.acceptPolicy] = false
+                                            showSheet = false
+                                            presentSheet = .explain0
+                                        })
+                                    ]
+                        )
+                    })
+            }
         }
     }
 }

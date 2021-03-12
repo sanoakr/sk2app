@@ -48,7 +48,7 @@ class Sk2Globals: AnkoLogger {
         const val NAME_DEMOUSER = "$NAME_START_TESTUSER-demo"
 
         /*** View カラー ***/
-        var COLOR_BACKGROUND = Color.parseColor("#fbfbfb") //#ecf0f1
+        var COLOR_BACKGROUND = Color.parseColor("#fdfdfd") //#ecf0f1
         var COLOR_BACKGROUND_TITLE = Color.parseColor("#eeeeee")
         var COLOR_NORMAL = Color.parseColor("#2589cd") //#3498db
         var COLOR_NORMAL_LIGHT = Color.parseColor("#127ac0") //#2085c6

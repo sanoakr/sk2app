@@ -139,7 +139,7 @@ extension ClScanner: CLLocationManagerDelegate {
             break
         }
     }
-    
+    /*
     func requestEnterNotification(region: Region) {
         let content = UNMutableNotificationContent()
         content.title = "didEnterRegion: " + region.identifier.description
@@ -149,7 +149,7 @@ extension ClScanner: CLLocationManagerDelegate {
         // 残っているリクエストをすべて削除してから追加
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
-    }
+    }*/
     //
     // ビーコンからのRegioning情報が届いた
     //
