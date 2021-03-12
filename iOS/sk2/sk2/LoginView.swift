@@ -41,7 +41,7 @@ struct LoginView: View {
     // SheetView
     @State private var presentSheet: PresentSheet = .explain0
     @State private var showSheet = false
-        
+    
     var body: some View {
         VStack {
             Spacer(minLength:30)
@@ -67,7 +67,7 @@ struct LoginView: View {
                     // loggiedin && acceptPolicy で SplashView から MainView へ遷移
                     loggedin = authenticator.challenge(orgnization: orgnization, id: id, passwd: passwd)
                     acceptPolicy = false
-
+                    
                     if loggedin {
                         // バージョン更新がなくてポリシー承認済みなら MainView へ
                         if build == userDefaults[.appBuild] && version == userDefaults[.appVersion] && (userDefaults[.acceptPolicy] ?? false) {
@@ -111,15 +111,52 @@ struct LoginView: View {
         }
         .sheet(isPresented: $showSheet) {
             if (presentSheet == .explain0) {
-                Text("説明0")
-                Button("次へ") {
-                    presentSheet = .explain1
+                VStack {
+                    Text("sk2 は教室位置情報をバックグラウンドで取得します")
+                        .font(.title2)
+                        .foregroundColor(Color.blue)
+                        .padding(8)
+                    Image("explain1")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width:200, height:150)
+                    
+                    VStack(alignment: .leading) {
+                        ListedText(text: "sk2アプリを一度起動しておけば、自動で出席記録が行われます。")
+                        ListedText(text: "教室移動などでビーコン信号が変化すると自動で出席情報が送信されます。")
+                        ListedText(text: "自動送信は、龍谷大学瀬田キャンパス内で、授業実施時間にのみ実行されます。")
+                        ListedText(text: "自動送信の記録頻度は最短でも10分に1回です。")
+                    }
+                    Button("次へ") {
+                        presentSheet = .explain1
+                    }
+                    .font(.headline)
                 }
+                .padding(32)
+                
             } else if (presentSheet == .explain1) {
-                Text("説明1")
-                Button("次へ") {
-                    presentSheet = .privacy
+                VStack {
+                    Text("sk2 は手動送信でのみ、緯度経度を含むおおよその位置情報を取得します")
+                        .font(.title2)
+                        .foregroundColor(Color.blue)
+                        .padding(8)
+                    Image("explain2")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width:200, height:150)
+                    
+                    VStack(alignment: .leading) {
+                        ListedText(text: "手動送信は「出席」ボタンで表示される「送信場所」を選択すると実行されます。")
+                        ListedText(text: "手動記録では、GPSや基地局情報などからおおよその緯度経度情報が送信されます。")
+                        ListedText(text: "手動記録は、オンライン授業での出席記録や災害時の安否確認などに利用されます。")
+                    }
+                    Button("次へ") {
+                        presentSheet = .privacy
+                    }
+                    .font(.headline)
                 }
+                .padding(32)
+                
             } else if (presentSheet == .privacy) {
                 WebPrivacyView(showPrivacyActionSheet: $showPrivacyActionSheet)
                     .actionSheet(isPresented: $showPrivacyActionSheet, content: {
@@ -146,6 +183,21 @@ struct LoginView: View {
     }
 }
 
+// ListedText for Explanation Sheets
+struct ListedText: View {
+    var text: String
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            Text("● ")
+                .foregroundColor(Color.blue)
+            Text(text)
+                .font(.body)
+        }
+        .padding(.vertical)
+    }
+}
+
 // Animated Shaker
 struct Shake: GeometryEffect {
     var amount: CGFloat = 10
@@ -154,6 +206,6 @@ struct Shake: GeometryEffect {
     
     func effectValue(size: CGSize) -> ProjectionTransform {
         ProjectionTransform(CGAffineTransform(translationX:
-            amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)), y: 0))
+                                                amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)), y: 0))
     }
 }
