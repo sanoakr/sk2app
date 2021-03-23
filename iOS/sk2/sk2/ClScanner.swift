@@ -123,6 +123,9 @@ class ClScanner: NSObject, ObservableObject {
         if(status == CLAuthorizationStatus.notDetermined) {
             locationManager.requestAlwaysAuthorization() // Always!!
         }
+        // ロケーションの更新を開始
+        locationManager.startUpdatingHeading()
+        
         // Notification のリクエスト
         UNUserNotificationCenter.current().requestAuthorization(options: [.badge, .sound, .alert]) { (granted, error) in
             DispatchQueue.main.async {
