@@ -22,7 +22,7 @@ struct SplashView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                if loggedin && acceptPolicy {
+                if loggedin && acceptPolicy && build == userDefaults[.appBuild] {
                     MainView(loggedin: $loggedin, userId: userDefaults[.userId]!, userNameJP: userDefaults[.userNameJP]!)
                 } else {
                     LoginView(loggedin: $loggedin, acceptPolicy: $acceptPolicy)

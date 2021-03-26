@@ -166,6 +166,8 @@ struct LoginView: View {
                                         .default(Text("承認します"), action: {
                                             acceptPolicy = true
                                             userDefaults[.acceptPolicy] = true
+                                            userDefaults[.appBuild] = build
+                                            userDefaults[.appVersion] = version
                                             showSheet = false
                                         }),
                                         .destructive(Text("承認しません"), action: {
