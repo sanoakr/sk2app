@@ -329,6 +329,7 @@ class RecordLocalAdapter: BaseAdapter(), AnkoLogger {
                                     horizontalGravity = left
                                 }
                                 ////////////////////////////////////////
+                                /*
                                 textView("(${major}, ${minor})") {
                                     textSize = TEXT_SMALL
                                     textColor = Color.BLACK
@@ -336,6 +337,7 @@ class RecordLocalAdapter: BaseAdapter(), AnkoLogger {
                                     horizontalGravity = left
                                     horizontalMargin = dip(8)
                                 }
+                                 */
                             }.lparams {
                                 horizontalMargin = dip(3)
                             }

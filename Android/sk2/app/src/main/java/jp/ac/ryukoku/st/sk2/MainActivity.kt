@@ -296,8 +296,8 @@ class MainActivity : AppCompatActivity(), BeaconConsumer, AnkoLogger {
             info("Attend Reply: Too Short Interval")
             return Pair(false, "short interval")
         }
-        // 時間外なら送信しない
-        if (now.toLocalTime() < from || to < now.toLocalTime()) {
+        // 時間外で自動ならなら送信しない
+        if ((now.toLocalTime() < from || to < now.toLocalTime()) && !manual) {
             info("Attend: Overtime")
             toast(TOAST_OUT_OF_TIME).setGravity(Gravity.CENTER, 0, 0)
             return Pair(false, "overtime")
