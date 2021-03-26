@@ -391,9 +391,9 @@ class ClScanner: NSObject, ObservableObject {
             dtprint(string: "\(#function): Too Short Interval")
             return (.short, nil)
         }
-        // 時間外なら送信しない
+        // 時間外で自動なら送信しない
         let nowTime = timeFormatter.string(from: now)
-        if (nowTime < startTime || endTime < nowTime) {
+        if ((nowTime < startTime || endTime < nowTime) && !manual) {
             dtprint(string: "\(#function): Overtime")
             return (.overtime, nil)
         }

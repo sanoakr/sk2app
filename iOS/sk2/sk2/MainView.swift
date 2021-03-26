@@ -126,8 +126,8 @@ struct MainView: View {
                             HStack {
                                 Text((info.Notes1 ?? "").replacingOccurrences(of: "_", with: " "))
                                     .font(.caption)
-                                Text("(\(String(Int(info.Major1 ?? -1))),\(String(Int(info.Minor1 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
-                                    .font(.caption)
+                                //Text("(\(String(Int(info.Major1 ?? -1))),\(String(Int(info.Minor1 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
+                                //    .font(.caption)
                                 Spacer()
                             }
                             .padding(.leading, 5)
@@ -136,8 +136,8 @@ struct MainView: View {
                                 HStack {
                                     Text(info.Notes2!.replacingOccurrences(of: "_", with: " "))
                                         .font(.caption)
-                                    Text("(\(String(Int(info.Major2 ?? -1))),\(String(Int(info.Minor2 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
-                                        .font(.caption)
+                                    //Text("(\(String(Int(info.Major2 ?? -1))),\(String(Int(info.Minor2 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
+                                    //    .font(.caption)
                                     Spacer()
                                 }
                                 .padding(.leading, 5)
@@ -146,8 +146,8 @@ struct MainView: View {
                                 HStack {
                                     Text(info.Notes3!.replacingOccurrences(of: "_", with: " "))
                                         .font(.caption)
-                                    Text("(\(String(Int(info.Major3 ?? -1))),\(String(Int(info.Minor3 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
-                                        .font(.caption)
+                                    //Text("(\(String(Int(info.Major3 ?? -1))),\(String(Int(info.Minor3 ?? -1))))".replacingOccurrences(of: "(-1,-1)", with: "---"))
+                                    //    .font(.caption)
                                     Spacer()
                                 }
                                 .padding(.leading, 5)
@@ -291,9 +291,11 @@ struct MainView: View {
         // FORCE Restart Regioning for Sending
         clScanner.startRegion(area: clScanner.currentArea, force: true)
         
-        // for
-        if !clScanner.manualSendFinished {
-            clScanner.proceedSend(beacons: [], typeSignal: typeSignal, manual: true)
+        // 少し待って前のビーコン情報を（カラでも）強制的に送信
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            if !clScanner.manualSendFinished {
+                clScanner.proceedSend(beacons: clScanner.lastBeacons, typeSignal: typeSignal, manual: true)
+            }
         }
     }
 }
