@@ -2,6 +2,7 @@ package jp.ac.ryukoku.st.sk2
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -10,6 +11,7 @@ import android.os.Bundle
 import android.os.RemoteException
 import android.provider.Settings
 import android.view.Gravity
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
@@ -270,7 +272,7 @@ class MainActivity : AppCompatActivity(), BeaconConsumer, AnkoLogger {
     /** ////////////////////////////////////////////////////////////////////////////// **/
     @SuppressLint("MissingPermission")
     fun sendAttend(beacons: List<Beacon>?, text: String = String(),
-        typeSignal: SType = SType.AUTO, manual: Boolean = false): Pair<Boolean, String?> {
+                   typeSignal: SType = SType.AUTO, manual: Boolean = false): Pair<Boolean, String?> {
         /** Beacons **/
         var sendBeacons = beacons
         var sendLocation = Pair(0.0, 0.0)
@@ -352,42 +354,32 @@ class MainActivity : AppCompatActivity(), BeaconConsumer, AnkoLogger {
         info.Longitude = sendLocation.second
         val beaconTriples = beaconsToTriples(beacons)
         beaconTriples.elementAtOrNull(0)?.let {
-            info.Major1 = it.first; info.Minor1 = it.second; info.Room1 = it.third }
+            info.Major1 = it.first; info.Minor1 = it.second; info.Room1 = it.third
+        }
         beaconTriples.elementAtOrNull(1)?.let {
-            info.Major2 = it.first; info.Minor2 = it.second; info.Room2 = it.third }
+            info.Major2 = it.first; info.Minor2 = it.second; info.Room2 = it.third
+        }
         beaconTriples.elementAtOrNull(3)?.let {
-            info.Major3 = it.first; info.Minor3 = it.second; info.Room3 = it.third }
+            info.Major3 = it.first; info.Minor3 = it.second; info.Room3 = it.third
+        }
 
         infoQueue.push(info)
         // ログを Preferences に保存
         Sk2Preferences.setString(Sk2Preferences.Key.LOGS, infoQueue.toJson())
     }
+
     /** ////////////////////////////////////////////////////////////////////////////// **/
+    @SuppressLint("MissingPermission")
     private fun getLastLocation() {
         /** 位置情報へのパーミッションをチェック **/
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            /** API 23以上なら位置情報の確認が必要 **/
-            if (Build.VERSION.SDK_INT >= 23) {
-                /** 位置情報へのパーミッションをリクエスト **/
-                if (!checkPermissions(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    requestPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
-                }
-                /** API 29以上ならバックグラウンド位置情報の確認が必要 **/
-                if (Build.VERSION.SDK_INT >= 29) {
-                    /** バックグラウンド位置情報へのパーミッションをリクエスト **/
-                    if (!checkPermissions(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                        requestPermissions(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    }
-                }
-            }
+        if (Build.VERSION.SDK_INT >= 30) {
+            checkLocationPermission30(REQUEST_PERMISSIONS_REQUEST_CODE)
+        } else if (Build.VERSION.SDK_INT >= 29) {
+            checkLocationPermission29(REQUEST_PERMISSIONS_REQUEST_CODE)
+        } else {
+            checkLocationPermission28(REQUEST_PERMISSIONS_REQUEST_CODE)
         }
+
         /** 位置情報サービス Listner ： getLastLocation() で呼ばれる **/
         fusedLocationClient.lastLocation.addOnSuccessListener {
             if (it != null) {
@@ -395,35 +387,80 @@ class MainActivity : AppCompatActivity(), BeaconConsumer, AnkoLogger {
                 lastLocation = Pair(it.latitude, it.longitude)
             } else {
                 // 位置情報が無かったら取りに行く
-                val request= LocationRequest.create()
-                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                    .setInterval(500)
-                    .setFastestInterval(300)
+                val request = LocationRequest.create()
+                        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                        .setInterval(500)
+                        .setFastestInterval(300)
                 fusedLocationClient.requestLocationUpdates(
-                    request,
-                    object : LocationCallback() {
-                        override fun onLocationResult(result: LocationResult) {
-                            /** 位置情報を更新 **/
-                            lastLocation = Pair(result.lastLocation.latitude, result.lastLocation.longitude)
-                            // 現在地だけ欲しいので、1回取得したらすぐに外す
-                            fusedLocationClient.removeLocationUpdates(this)
-                        }
-                    },
-                    null
+                        request,
+                        object : LocationCallback() {
+                            override fun onLocationResult(result: LocationResult) {
+                                /** 位置情報を更新 **/
+                                lastLocation = Pair(result.lastLocation.latitude, result.lastLocation.longitude)
+                                // 現在地だけ欲しいので、1回取得したらすぐに外す
+                                fusedLocationClient.removeLocationUpdates(this)
+                            }
+                        }, null
                 )
             }
         }
     }
     /** ////////////////////////////////////////////////////////////////////////////// **/
     /*** パーミッションをチェック ***/
-    private fun checkPermissions(permission: String): Boolean {
+    private fun checkPermission(permission: String): Boolean {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-            this,
-            permission
+                this,
+                permission
         )
     }
     /** ////////////////////////////////////////////////////////////////////////////// **/
+    /*** パーミッションをリクエスト <= 28 ***/
+    private fun checkLocationPermission28(locationRequestCode: Int) {
+        if (!checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                !checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            val permList = arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+            requestPermissions(permList, locationRequestCode)
+        }
+    }
+    /** ////////////////////////////////////////////////////////////////////////////// **/
+    /*** パーミッションをリクエスト == 29 ***/
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun checkLocationPermission29(locationRequestCode: Int) {
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) &&
+                checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) return
+        val permList = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        requestPermissions(permList, locationRequestCode)
+
+    }
+    /** ////////////////////////////////////////////////////////////////////////////// **/
+    /*** パーミッションをリクエスト == 30 ***/
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun checkLocationPermission30(locationRequestCode: Int) {
+        if (checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) return
+        AlertDialog.Builder(this)
+                .setTitle("sk2はバックグラウンドでの位置情報を利用します")
+                .setMessage("位置情報の権限で「常に許可」を選択します。設定画面に移動しますか？")
+                .setPositiveButton("はい") { _, _ ->
+                    // this request will take user to Application's Setting page
+                    requestPermissions(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), locationRequestCode)
+                }
+                .setNegativeButton("いいえ") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+                .show()
+    }
+}
+    /*
+    /** ////////////////////////////////////////////////////////////////////////////// **/
     /*** パーミッションをリクエスト ***/
+
     private fun requestPermissions(permission: String) {
         val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
             this,
@@ -484,3 +521,4 @@ class MainActivity : AppCompatActivity(), BeaconConsumer, AnkoLogger {
         }
     }
 }
+*/
