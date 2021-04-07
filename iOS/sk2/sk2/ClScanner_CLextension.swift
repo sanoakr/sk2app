@@ -165,8 +165,8 @@ extension ClScanner: CLLocationManagerDelegate {
         // 最新のビーコン情報（手動送信用に時間と保持)
         lastBeaconUpdate = Date()
         lastBeacons = sBeacons
-        // ビーコン情報送信処理
-        proceedSend(beacons: sBeacons)
+        // ビーコン情報送信処理（自動か手動かは不明なので sType は scanTypeSignal をみる）
+        proceedSend(beacons: sBeacons, typeSignal: scanTypeSignal)
 
         // 取得したビーコン情報からリージョンエリアを再設定する
         if scanning {

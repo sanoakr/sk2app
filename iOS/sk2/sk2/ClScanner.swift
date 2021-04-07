@@ -26,6 +26,8 @@ class ClScanner: NSObject, ObservableObject {
     var buttonToggle = false
     // 手動送信完了フラグ
     var manualSendFinished = false
+    // スキャントリガ送信時の送信タイプ設定（手動送信にリアルタイムスキャンできたとき用）
+    var scanTypeSignal = sType.auto
     // MainView の通知 Popup
     @Published var showPopup: Bool = false
     var popupContents: (String, Color) = ("nil", Color.blue)
@@ -331,10 +333,11 @@ class ClScanner: NSObject, ObservableObject {
         case unknown_fail
     }
     // 送信処理
-    func proceedSend(beacons: [CLBeacon], typeSignal: sType = .auto, manual: Bool = false) {
-        // スキャンフラグがオフなら何もせずに終了
-        if !scanning { return }
-
+    func proceedSend(beacons: [CLBeacon], typeSignal: sType, manual: Bool = false) {
+        // スキャンフラグがオフならスキャンフラグを auto にして終了
+        if !scanning {
+            return
+        }
         // 送信ビーコンセット && 緯度経度
         var sendBeacons = beacons
         var latitude: CLLocationDegrees = 0
@@ -351,6 +354,8 @@ class ClScanner: NSObject, ObservableObject {
                 longitude = location.longitude
             }
         }
+        //print("******* proceedScan: \(typeSignal)")
+
         // ビーコン情報送信
         let (stat, reply) = sendSk2Attend(beacons: sendBeacons, typeSignal: typeSignal, manual: manual, latitude: latitude, longitude: longitude)
         dtprint(string: "(\(stat), \(String(describing: reply)))")
@@ -360,9 +365,10 @@ class ClScanner: NSObject, ObservableObject {
             if (stat == .emptybeacons && buttonToggle) {
             togglePopup(message: "出席ビーコンはありません", color: Color.red)
             }
-            if (stat == .overtime) {
-                togglePopup(message: "時間外です", color: Color.red)
-            }
+            // 手動送信は時間外でも可
+            //if (stat == .overtime) {
+            //    togglePopup(message: "時間外です", color: Color.red)
+            //}
         }
         // 送信時処理
         if let reply = reply { // 送信トライしていたら reply がある
@@ -385,6 +391,7 @@ class ClScanner: NSObject, ObservableObject {
     
     // サーバへ出席情報を送信
     func sendSk2Attend(beacons: [CLBeacon], typeSignal: sType = .auto, manual: Bool = false, latitude: CLLocationDegrees = 0, longitude: CLLocationDegrees = 0) -> (SendStat, String?) {
+        dtprint(string: "\(typeSignal)")
         let now = Date()
         // 前回送信が5分未満なら送信しない // 手動のときは10分前に巻き戻しているので通過する
         if (now.timeIntervalSince(lastAutoSendDatetime) < 60 * 5) { // 5 minuites for testing

@@ -286,16 +286,23 @@ struct MainView: View {
     
     // 手動送信
     func manualSendProceed(typeSignal: sType) {
+        // リアルタイムスキャン用にタイプを設定
+        clScanner.scanTypeSignal = typeSignal
         // rewind 10 minuites before
         clScanner.rewindLastSendDatetime(rewindMinute: 10)
         // FORCE Restart Regioning for Sending
         clScanner.startRegion(area: clScanner.currentArea, force: true)
+        // スキャンPopup
+        clScanner.togglePopup(message: "ビーコンをスキャン中", color: Color.blue)
         
-        // 少し待って前のビーコン情報を（カラでも）強制的に送信
+        // 少し待って
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            // スキャントリガで未送信なら、最近スキャンののビーコン情報を（カラでも）強制的に送信
             if !clScanner.manualSendFinished {
                 clScanner.proceedSend(beacons: clScanner.lastBeacons, typeSignal: typeSignal, manual: true)
             }
+            // 送信タイプを auto にリセット
+            clScanner.scanTypeSignal = .auto
         }
     }
 }
