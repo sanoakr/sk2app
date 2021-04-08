@@ -190,6 +190,8 @@ struct MainView: View {
             
             Button(action: {
                 print("Button")
+                // キーボードを閉じる
+                UIApplication.shared.endEditing()
                 // 送信文字列を付与
                 clScanner.sendText = sendText
                 // ボタンを通知
@@ -304,5 +306,18 @@ struct MainView: View {
             // 送信タイプを auto にリセット
             clScanner.scanTypeSignal = .auto
         }
+    }
+    
+}
+
+// キーボードを閉じるための UI拡張
+extension UIApplication {
+    func endEditing() {
+        sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 }
