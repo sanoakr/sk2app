@@ -51,16 +51,8 @@ struct LoginView: View {
             
             Spacer(minLength: 30)
             VStack {
-                TextField("全学認証ID", text: $id)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(5)
-                    .keyboardType(.asciiCapable)
-                    .autocapitalization(.none)
-                SecureField("パスワード", text: $passwd)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(5)
-                    .keyboardType(.asciiCapable)
-                    .autocapitalization(.none)
+                CustomTextField(placeholder: Text("全学認証ID").foregroundColor(.blue), text: $id, secure: false)
+                CustomTextField(placeholder: Text("パスワード").foregroundColor(.blue), text: $passwd, secure: true)
                 Spacer(minLength: 30)
                 
                 Button(action: {
@@ -103,6 +95,7 @@ struct LoginView: View {
                 }
                 .padding(5)
             }
+            .padding(10)
             .modifier(Shake(animatableData: CGFloat(attempts)))
             .keyboardObserving()
         }
@@ -184,7 +177,32 @@ struct LoginView: View {
         }
     }
 }
+// CustomTextField
+struct CustomTextField: View {
+    var placeholder: Text
+    @Binding var text: String
+    var editingChanged: (Bool)->() = { _ in }
+    var commit: ()->() = { }
+    var secure: Bool
 
+    var body: some View {
+        ZStack(alignment: .leading) {
+            if secure {
+                SecureField("", text: $text, onCommit: commit)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .keyboardType(.asciiCapable)
+                    .autocapitalization(.none)
+            } else {
+                TextField("", text: $text, onEditingChanged: editingChanged, onCommit: commit)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .keyboardType(.asciiCapable)
+                    .autocapitalization(.none)
+                }
+
+            if text.isEmpty { placeholder.padding(10) }
+        }
+    }
+}
 // ListedText for Explanation Sheets
 struct ListedText: View {
     var text: String
@@ -199,7 +217,6 @@ struct ListedText: View {
         .padding(.vertical)
     }
 }
-
 // Animated Shaker
 struct Shake: GeometryEffect {
     var amount: CGFloat = 10
